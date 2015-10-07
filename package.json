@@ -1,0 +1,11 @@
+{
+  "name": "shack-splicer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "shakSplicer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "CS412 Group 9",
+  "license": "ISC"
+}
