@@ -7,5 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "CS412 Group 9",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "xml2js": "^0.4.12"
+  }
 }
