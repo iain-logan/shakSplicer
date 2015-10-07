@@ -1,8 +1,25 @@
 var fs = require('fs');
 var parseString = require('xml2js').parseString;
+var xml2js = require('xml2js');
+
 
 var sourcePath = process.argv[2],
-    destinPath = process.argv[3];
+    destinPath = process.argv[3],
+    folderNo = 0,
+    lock = false,
+    builder = new xml2js.Builder();
+
+var getNextNumber = function(){
+    if(lock){
+	setTimeOut(getNextNumber,5);
+	return;
+    }
+    lock = true;
+    folderNo++;
+    lock = false;
+    return folderNo;
+}
+
 try{
     var destPathStats = fs.statSync(destinPath);
     if(destPathStats.isFile()){
@@ -37,6 +54,15 @@ var parse = function (pathToFile) {
 parse(sourcePath + files[0]);
 
 var splice = function (tag, destination){
-   
+    var dest = destination + "/" + getNextNumber();
+    this.tags = Object.keys(tag);
+    this.tag = tag;
     
-}
+    fs.mkdirSync(dest);
+    fs.writeFile(dest + "/" + getNextNumber() + ".xml", builder.buildObject(tag), function(err){
+                              console.log(this);
+			     this.tags.forEach(function(elem){
+				 splice(tag[elem], dest)
+			     });
+			 }.bind(this));
+};
