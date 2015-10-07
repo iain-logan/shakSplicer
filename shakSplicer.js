@@ -3,22 +3,24 @@ var parseString = require('xml2js').parseString;
 
 var sourcePath = process.argv[2],
     destinPath = process.argv[3];
-
-var destPathStats = fs.statSync(destinPath);
-
-if(! destPathStats.isFile() && !destPathStats.isDirectory()){
+try{
+    var destPathStats = fs.statSync(destinPath);
+    if(destPathStats.isFile()){
+	console.log("Destination was a file");
+	process.exit(1);
+    }
+    else{
+	console.log("Directory already exists");
+    }
+}catch(err){
     fs.mkdirSync(destinPath);
-}else if(destPathStats.isFile()){
-console.log("Destination was a file");
-process.exit(1);
+    console.log("Directory doesn't exist so a new one has been made");
 }
-else{
-    console.log("Directory already exists");
-}
+
 
 
 console.log('splicing xml files from ' + sourcePath + ' to ' + destinPath);
-var files = fs.readirSync(sourcePath);
+var files = fs.readdirSync(sourcePath);
 
 console.log(files.filter( function (file) {
     return file.indexOf('.xml', file.length - 4) !== -1;
