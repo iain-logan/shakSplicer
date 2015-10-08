@@ -1,23 +1,22 @@
-var fs = require('fs');
+var fs = require('graceful-fs');
 var parseString = require('xml2js').parseString;
 var xml2js = require('xml2js');
-
 
 var sourcePath = process.argv[2],
     destinPath = process.argv[3],
     folderNo = 0,
     lock = false,
-    builder = new xml2js.Builder();
+    builder = new xml2js.Builder({xmldec: { 'version': '1.0', 'encoding': 'ASCII', 'standalone': true}});
 
-var getNextNumber = function(){
+var getNextNumber = function(callback){
     if(lock){
-	setTimeOut(getNextNumber,5);
+	setTimeout(function () { getNextNumber(callback) },5);
 	return;
     }
     lock = true;
     folderNo++;
+    callback(folderNo);
     lock = false;
-    return folderNo;
 }
 
 try{
@@ -45,24 +44,51 @@ console.log(files.filter( function (file) {
 
 var parse = function (pathToFile) {
     fs.readFile(pathToFile, 'ascii', function (err, data) {
+	console.log(err);
 	parseString(data, function (err, result) {
 	    splice(result, destinPath);
 	});
     });
 };
 
-parse(sourcePath + files[0]);
-
 var splice = function (tag, destination){
-    var dest = destination + "/" + getNextNumber();
-    this.tags = Object.keys(tag);
-    this.tag = tag;
-    
-    fs.mkdirSync(dest);
-    fs.writeFile(dest + "/" + getNextNumber() + ".xml", builder.buildObject(tag), function(err){
-                              console.log(this);
-			     this.tags.forEach(function(elem){
-				 splice(tag[elem], dest)
-			     });
-			 }.bind(this));
+    getNextNumber(function (nextNum) {
+	var dest = destination + "/" + nextNum;
+	if (typeof tag === 'object') {
+	    var tags = Object.keys(tag).map(function (elm) {
+	            return {name: elm, value: tag[elm]};
+	        }),
+		deapen = function (dest) {
+		    tags.forEach(function(elem){
+			if (Array.isArray(elem.value)) {
+			    elem.value.forEach(function (elm) {
+				var obj = {};
+				obj[elem.name] = elm;
+				splice(obj, dest);
+			    });
+			} else if (typeof elem.value === 'object'){
+			    splice(elem.value, dest);
+			}
+		    });
+		};
+
+	    if (tags.length === 1 && !Array.isArray(tags[0].value)) {
+		fs.mkdir(dest, function () {
+		    getNextNumber(function (nextNum) {
+			fs.writeFile(dest + "/" + nextNum + ".xml", builder.buildObject(tag), function(err) {
+			    if (err !== null)
+				console.log(err);
+			    deapen(dest);
+			});
+		    });
+		});
+	    } else {
+		deapen(destination);
+	    }
+	}
+    });
 };
+
+files.forEach(function (elm) {
+    parse(sourcePath + elm);
+});
