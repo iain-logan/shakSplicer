@@ -9,6 +9,7 @@
   "author": "CS412 Group 9",
   "license": "ISC",
   "dependencies": {
-    "xml2js": "^0.4.12"
+    "xml2js": "^0.4.12",
+    "lodash": "~3.10.1"
   }
 }
