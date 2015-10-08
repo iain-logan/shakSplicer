@@ -1,4 +1,4 @@
-var fs = require('fs');
+var fs = require('graceful-fs');
 var parseString = require('xml2js').parseString;
 var xml2js = require('xml2js');
 
@@ -76,6 +76,8 @@ var splice = function (tag, destination){
 		fs.mkdir(dest, function () {
 		    getNextNumber(function (nextNum) {
 			fs.writeFile(dest + "/" + nextNum + ".xml", builder.buildObject(tag), function(err) {
+			    if (err !== null)
+				console.log(err);
 			    deapen(dest);
 			});
 		    });
