@@ -4,9 +4,7 @@ var xml2js = require('xml2js');
 
 var sourcePath = process.argv[2],
     destinPath = process.argv[3],
-    folderNo = 0,
-    lock = false,
-    builder = new xml2js.Builder({xmldec: { 'version': '1.0', 'encoding': 'ASCII', 'standalone': true}});
+    folderNo = 0;
 
 if (process.argv[2] === "--help" || process.argv[2] === undefined || process.argv[2] === null) {
     console.log("Usage: node shackSplicer.js sourcePath destinationPath\n");
@@ -18,14 +16,14 @@ if (process.argv[2] === "--help" || process.argv[2] === undefined || process.arg
 
 
 var getNextNumber = function(callback){
-    if(lock){
-	setTimeout(function () { getNextNumber(callback) },5);
-	return;
-    }
-    lock = true;
+//    if(lock){
+//	setTimeout(function () { getNextNumber(callback) },5);
+//	return;
+//    }
+//    lock = true;
     folderNo++;
     callback(folderNo);
-    lock = false;
+//    lock = false;
 }
 
 try{
@@ -81,6 +79,16 @@ var splice = function (tag, destination){
 	    if (tags.length === 1 && !Array.isArray(tags[0].value)) {
 		fs.mkdir(dest, function () {
 		    getNextNumber(function (nextNum) {
+			var doctypePath = 'play.dtd';
+			var depthCount = (dest.match(/\//g) || []).length - (destinPath.match(/\//g) || []).length;
+			for (var dci = 0; dci < depthCount; dci++) {
+			    doctypePath = "../" + doctypePath
+			}
+			var builder = new xml2js.Builder(
+			    {xmldec: { 'version': '1.0', 'encoding': 'utf-8', 'standalone': false},
+			     doctype: {sysID: doctypePath},
+			     headless: false
+			    });
 			fs.writeFile(dest + "/" + nextNum + ".xml", builder.buildObject(tag), function(err) {
 			    if (err !== null)
 				console.log(err);
@@ -94,6 +102,17 @@ var splice = function (tag, destination){
 	}
     });
 };
+
+console.log('Copying over dtd file');
+
+fs.readFile(sourcePath + 'play.dtd', 'ascii', function (err, data) {
+    console.log(err);
+    console.log(data);
+    console.log(destinPath + '/play.dtd');
+    fs.writeFile(destinPath + '/play.dtd', data, function (err) {
+
+    });
+});
 
 console.log("Starting parsing and splicing of " + files.length + " file" + (files.length > 1 ? "s" : "") + "... this may take some time\n");
 
